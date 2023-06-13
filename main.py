@@ -19,7 +19,7 @@ rows = math.floor(WINDOW_HEIGHT/cell_size) # var
 
 grid = [] # 1D Array(List) to store all the cells v a r
 
-def setup():
+def setup(): #this is only being called once at the beginning
     for j in range(rows):
         for i in range(columns):
             cell = Cell(i,j)
@@ -35,7 +35,7 @@ class Cell:
     def __init__(self, i, j):
         self.i = i
         self.j = j
-        self.walls = [False, True, True, True]
+        self.walls = [True, True, True, True]
         self.visited = False
 
     def getCoords(self):
@@ -56,21 +56,26 @@ class Cell:
         if self.walls[0]:
             #Line Bottom
             pygame.draw.line(SCREEN, "white", (x,y),(x+cell_size,y),1)
+            print("line draw Bottom")
 
         if self.walls[1]:
             #Line Right
             pygame.draw.line(SCREEN, "white", (x+cell_size,y),(x+cell_size, y+cell_size),1)
+            print("line draw Right")
 
         if self.walls[2]:
             #Line Left
             pygame.draw.line(SCREEN, "white", (x,y),(x,y+cell_size),1)
+            print("line draw Left")
 
         if self.walls[3]:
             #Line Top
             pygame.draw.line(SCREEN, "white", (x,y+cell_size),(x+cell_size,y+cell_size),1)
+            print("line draw Top")
+
         if self.visited:
             rect = pygame.Rect(x,y,cell_size,cell_size)
-            pygame.draw.rect(SCREEN, "grey ", rect,0)
+            pygame.draw.rect(SCREEN, "grey ", rect,-1)
     def checkNeighbors(self):
         neighbors = []
 
@@ -84,20 +89,13 @@ class Cell:
 
 
 
-        #sides = [top, right, bottom, left]
         for n in sides:
-            print(f'n-cell is visited?: {n.visited}')
             if n and not n.visited:
                 neighbors.append(n)
-        print(len(neighbors))
-
-                #print(f'Added: {n} to neighbors, which is {len(neighbors)} long')
-
 
 
         if len(neighbors) > 0:
             r = random.randint(0, len(neighbors)-1) # has to be -1 because random function is (inclusive, inclusive)
-            #print(len(neighbors))
             return neighbors[r]
         else:
             return None
@@ -107,10 +105,10 @@ class Cell:
 
 
 
-
 def drawGrid():
     for s in range(len(grid)):
         grid[s].show() 
+    #print("DRAW") being called the whole time the loop is on
 
 
     
@@ -132,15 +130,21 @@ def removeWalls(final,initial):
     elif delta_x == -1:
         final.walls[1] = False # R
         initial.walls[2] = False# L
+
     
     delta_y = final.j - initial.j
 
     if delta_y == 1:
         final.walls[3] = False # T
         initial.walls[0] = False # B
+
     elif delta_y == -1:
         final.walls[0] = False # B
         initial.walls[3] = False # T
+
+
+    print(f"delta_x: {delta_x}")
+    print(f"delta_y: {delta_y}")
 
 
 def main():
@@ -152,7 +156,7 @@ def main():
 
     setup()
     current = grid[0]
-    current.visited = True
+    
 
 
     while True:
@@ -183,17 +187,19 @@ def main():
                 pygame.quit()
                 sys.exit()
             if event.type == pygame.KEYDOWN:
-                print("chnaged to true")
+                current.visited = True
 
                 next_cell = current.checkNeighbors()
 
+                print(f"current cell: {current.getCoords()}")
+                print(f"next_cell: {next_cell.getCoords()}")
+
                 if next_cell is not None:
                     next_cell.visited = True
-                    removeWalls(current, next_cell)
+                    removeWalls(next_cell, current)
                     current = next_cell
             
-                print(f'current{current.walls}')
-                print(f'next{next_cell.walls}')
+                
 
         
             
