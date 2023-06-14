@@ -5,6 +5,9 @@ import pygame, sys, math, random, time
 #Journal:
 """ 6/8 - walls are not visually being removed. pretty sure they are being removed in the code tho...
     6/9 - something is probably wrong with how I made my grid. I have a feeling cells aren't where they are supposed to be...
+    6/12 - removing the walls is still not working. The grid doesnt seem to be the problem. Right now I think it could be
+    the drawGrid() function constantly being called. Because within that the show function is being called which is responsible
+    for drawing the walls on the grid.
 
 
     
@@ -41,6 +44,13 @@ class Cell:
     def getCoords(self):
         return self.i, self.j
     
+    def highlight(self):
+        x = self.i * cell_size
+        y = self.j*cell_size
+
+        rect = pygame.Rect(x,y, cell_size, cell_size)
+        pygame.draw.rect(SCREEN, "white",rect, 0)
+    
     def show(self):
         x = self.i * cell_size
         y = self.j * cell_size
@@ -55,27 +65,36 @@ class Cell:
 
         if self.walls[0]:
             #Line Bottom
-            pygame.draw.line(SCREEN, "white", (x,y),(x+cell_size,y),1)
-            print("line draw Bottom")
+            pygame.draw.line(SCREEN, "green", (x,y),(x+cell_size,y),2)
+        else:
+            print("no")
+            
 
         if self.walls[1]:
             #Line Right
-            pygame.draw.line(SCREEN, "white", (x+cell_size,y),(x+cell_size, y+cell_size),1)
-            print("line draw Right")
+            pygame.draw.line(SCREEN, "green", (x+cell_size,y),(x+cell_size, y+cell_size),2)
+        else:
+            print("no")
+            
 
         if self.walls[2]:
             #Line Left
-            pygame.draw.line(SCREEN, "white", (x,y),(x,y+cell_size),1)
-            print("line draw Left")
+            pygame.draw.line(SCREEN, "green", (x,y),(x,y+cell_size),2)
+        else:
+            print("no")
+            
 
         if self.walls[3]:
             #Line Top
-            pygame.draw.line(SCREEN, "white", (x,y+cell_size),(x+cell_size,y+cell_size),1)
-            print("line draw Top")
-
-        if self.visited:
-            rect = pygame.Rect(x,y,cell_size,cell_size)
-            pygame.draw.rect(SCREEN, "grey ", rect,-1)
+            pygame.draw.line(SCREEN, "green", (x,y+cell_size),(x+cell_size,y+cell_size),2)
+        else:
+            print("no")
+            
+       # if self.visited:
+            #rect = pygame.Rect(x,y,cell_size,cell_size)
+            #pygame.draw.rect(SCREEN, "grey ", rect,-1)
+ 
+        
     def checkNeighbors(self):
         neighbors = []
 
@@ -85,13 +104,20 @@ class Cell:
         right = grid[index(self.i+1, self.j)]
         left = grid[index(self.i-1, self.j)]
 
-        sides = [bottom, right, left, top]
+        #sides = [bottom, right, left, top]
 
 
-
-        for n in sides:
-            if n and not n.visited:
-                neighbors.append(n)
+        #for n in sides:
+            #if n and not n.visited:
+             #   neighbors.append(n)
+        if bottom and not bottom.visited:
+            neighbors.append(bottom)
+        if right and not right.visited:
+            neighbors.append(right)
+        if left and not left.visited:
+            neighbors.append(left)
+        if top and not top.visited:
+            neighbors.append(top)
 
 
         if len(neighbors) > 0:
@@ -106,8 +132,24 @@ class Cell:
 
 
 def drawGrid():
-    for s in range(len(grid)):
-        grid[s].show() 
+    global current
+    for s in grid:
+        s.show() 
+    current.visited = True
+    #current.highlight()
+
+    next_cell = current.checkNeighbors()
+
+    if next_cell is not None:
+        next_cell.visited = True
+
+        removeWalls(current, next_cell)
+    current = next_cell
+
+
+
+    
+    
     #print("DRAW") being called the whole time the loop is on
 
 
@@ -119,47 +161,67 @@ def drawGrid():
       #  next.visited = True
      #   current = next
 
-def removeWalls(final,initial):
+def removeWalls(a,b):
     #a, b are cell 
-    #change = final - initial(a is final, b initial)
-    delta_x = final.i - initial.i
+    #change = a - b(a is a, b b)
+    delta_x = a.i - b.i
 
     if delta_x == 1:
-        final.walls[2] = False # L
-        initial.walls[1] = False # R
+        a.walls[2] = False # L
+        b.walls[1] = False # R
     elif delta_x == -1:
-        final.walls[1] = False # R
-        initial.walls[2] = False# L
+        a.walls[1] = False # R
+        b.walls[2] = False# L
 
     
-    delta_y = final.j - initial.j
+    delta_y = a.j - b.j
 
     if delta_y == 1:
-        final.walls[3] = False # T
-        initial.walls[0] = False # B
+        a.walls[3] = False # T
+        b.walls[0] = False # B
 
     elif delta_y == -1:
-        final.walls[0] = False # B
-        initial.walls[3] = False # T
+        a.walls[0] = False # B
+        b.walls[3] = False # T
 
 
-    print(f"delta_x: {delta_x}")
-    print(f"delta_y: {delta_y}")
 
 
 def main():
-    global SCREEN, CLOCK, current
+    global SCREEN,CLOCK,current
     pygame.init()
     SCREEN = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
     CLOCK = pygame.time.Clock()
     SCREEN.fill("black")
+    
 
-    setup()
     current = grid[0]
     
 
 
     while True:
+        
+        #time.sleep(0.25)
+        
+        drawGrid()
+        #current.visited = True
+        #current.highlight()
+
+        #next_cell = current.checkNeighbors()
+
+        #if next_cell is not None:
+            #next_cell.visited = True
+            #removeWalls(current, next_cell)
+            #time.sleep(1)
+        #current = next_cell
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            
+
+        pygame.display.update()
         #drawGrid()
         #--inside
         #current.visited = True
@@ -181,7 +243,7 @@ def main():
        # for z in grid:
          #   for i in range(3):
          #       z.walls[i] = False
-        
+        """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -198,14 +260,12 @@ def main():
                     next_cell.visited = True
                     removeWalls(next_cell, current)
                     current = next_cell
+                drawGrid()
+                pygame.display.update()"""
             
                 
 
-        
-            
-        drawGrid()
-        pygame.display.update()
-
+setup()
 print("Start Maze")
 main()
 
